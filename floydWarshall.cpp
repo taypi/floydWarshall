@@ -8,7 +8,8 @@ using namespace std;
  
 int readFile(char **);
 void getGraph(char **, int, float *);
-void printSolution(int, float *);
+void path(int i, int j, int v, int *nxt);
+void printSolution(int, float *, int *);
 void floydWarshall (int, float *);
  
 int main(int argc, char *argv[]) {
@@ -83,8 +84,8 @@ void getGraph(char* argv[], int v, float* graph) {
         exit(0);
     }
 
-    for (int i = 0; i < v; i++){
-        for (int j = 0; j < v; j++){
+    for (i = 0; i < v; i++){
+        for (j = 0; j < v; j++){
             if (graphString[i][j] == "inf"){
                 graph[i*v + j] = HUGE_VALF;
             }
@@ -96,22 +97,57 @@ void getGraph(char* argv[], int v, float* graph) {
     }
 }
 
-void printSolution(int v, float *dist) {
-    for (int i = 0; i < v; i++)
-    {
+void path(int i, int j, int v, int *nxt) {
+    if (i == j) cout << i << " ";
+    else if (nxt[i*v + j] == -1) cout << "no path exists";
+    else {
+        path(i, nxt[i*v + j], v, nxt);
+        cout << j << " ";
+    }
+}
+
+void printSolution(int v, float *dist, int *nxt) {
+
+    printf("\nMatrix D:\n\n");
+    for (int i = 0; i < v; i++) {
         for (int j = 0; j < v; j++)
-            printf ("%.0f\t", dist[i*v + j]);
+            cout << dist[i*v + j] << "\t";
+        cout << "\n";
+    }
+
+    printf("\nMatrix P:\n\n");
+    for (int i = 0; i < v; i++) {
+        for (int j = 0; j < v; j++) {
+            if (nxt[i*v + j] == -1) cout << "NIL\t";
+            else cout << nxt[i*v + j] << "\t";
+        }
         printf("\n");
+    }
+
+    printf("\nPaths:\n\n");
+    printf("Pair\tDist\tPath\n");
+    for (int i = 0; i < v; i++) {
+        for (int j = 0; j < v; j++) {
+            if (i != j){
+                cout << i << "->" << j << "\t " << dist[i*v + j] << "\t";
+                path(i, j, v, nxt);
+                cout << endl;
+            }
+        }
     }
 }
  
 void floydWarshall (int v, float *graph) {
 
     float dist[v*v];
+    int nxt[v*v];
  
     for (int i = 0; i < v; i++)
-        for (int j = 0; j < v; j++)
+        for (int j = 0; j < v; j++){
             dist[i*v + j] = graph[i*v + j];
+            if (i == j || isinf(graph[i*v + j])) nxt[i*v + j] = -1;
+            else nxt[i*v + j] = i;
+        }
  
     for (int k = 0; k < v; k++)
     {
@@ -119,11 +155,13 @@ void floydWarshall (int v, float *graph) {
         {
             for (int j = 0; j < v; j++)
             {
-                if (dist[i*v + k] + dist[k*v + j] < dist[i*v + j])
+                if (dist[i*v + k] + dist[k*v + j] < dist[i*v + j]){
                     dist[i*v + j] = dist[i*v + k] + dist[k*v + j];
+                    nxt[i*v + j] = nxt[k*v + j];
+                }
             }
         }
     }
  
-    printSolution(v, dist);
+    printSolution(v, dist, nxt);
 }
